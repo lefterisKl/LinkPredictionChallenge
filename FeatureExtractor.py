@@ -51,7 +51,7 @@ def makeGML(filename,dict):
     filehandler.write("]")
     filehandler.close()
 
-
+'''
 graph= Graph()
 train = open("training_set.txt","r").read().split("\n")
 connected = []
@@ -67,13 +67,69 @@ for example in train:
         connected.append(graph.neighboorhoodOverlap(n1,n2))
     else:
         not_connected.append(graph.neighboorhoodOverlap(n1,n2))
-
+'''
 
 
 def prepareInformationMap(filename):
-   information open(filename,"r")
+   map = {}
+   rawData =  open(filename,"r").read().split("\n")[:-1]
+   for line in rawData:
+       features = line.split(",")
+       print(features)
+       map[features[0]] = features[1:]
+   return map
+
+def extractEdgeFeatures(nodeInformationMap,node1,node2):
+    infoNode1 = nodeInformationMap[node1]
+    infoNode2 = nodeInformationMap[node2]
+    yearsDifference = abs( int(infoNode1[0]) - int(infoNode2[0]))
 
 
+def buildDictionary(nodeInformationMap):
+    dictionary= set([])
+    for key in nodeInformationMap:
+        terms =  nodeInformationMap[key][-1].split(" ")
+        twoGrams = []
+        for i in range(len(terms)-1):
+            twoGrams.append(terms[i]+" "+terms[i+1])
+        dictionary = dictionary.union(set(twoGrams))
+    print(dictionary)
+    handler = open("2-grams","w")
+    for term in dictionary:
+        handler.write(term+"\n")
+    handler.close()
+
+
+import math
+
+def computeIDF(nodeInformationMap,dictionary):
+    counts = {}
+    for key in nodeInformationMap:
+        terms = set( nodeInformationMap[key][-1].split(" "))
+        for term in terms:
+            if term in counts:
+                counts[term] +=1
+            else:
+                counts[term] = 1
+    handler = open("IDF","w")
+    N = len(nodeInformationMap)
+    for term in dictionary:
+        nT = counts[term]
+        handler.write(term+" "+str(math.log(1+N/nT))+"\n")
+    handler.close()
+
+def loadDictionary(filename):
+    dictionary = open(filename).read().split("\n")
+    return dictionary
+
+
+nodeInformationMap = prepareInformationMap("node_information.csv")
+buildDictionary(nodeInformationMap)
+oneGrams = loadDictionary("dictionary")
+computeIDF(nodeInformationMap,oneGrams)
+
+
+'''
 def extractEdgeInformation(n1,n2):
 
 makeGML("GMLFILE",graph.getDict())
@@ -105,3 +161,4 @@ plt.show()
 plt.scatter(list(range(len(connected))),connected,color="red")
 plt.scatter(list(range(len(not_connected))),not_connected,color="blue")
 plt.show()
+'''
